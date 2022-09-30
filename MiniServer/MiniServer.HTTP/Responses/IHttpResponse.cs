@@ -1,4 +1,5 @@
-﻿using MiniServer.HTTP.Headers;
+﻿using MiniServer.HTTP.Common;
+using MiniServer.HTTP.Headers;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,7 +10,7 @@ namespace MiniServer.HTTP.Responses
     public interface IHttpResponse {
         HttpResponseStatusCode StatusCode { get; set; }
         IHttpHeaderCollection Headers { get; }
-        byte[] Control { get; set; }
+        byte[] Content { get; set; }
 
         void AddHeader(HttpHeader header);
 
@@ -26,19 +27,19 @@ namespace MiniServer.HTTP.Responses
         }
 
         public HttpResponse(HttpResponseStatusCode statusCode) : this() {
-            CodeValidator.ThrowIfNull(StatusCode, name: nameof(StatusCode));
+            CoreValidator.ThrowIfNull(StatusCode, name: nameof(StatusCode));
             this.StatusCode = statusCode;
         }
         
         public HttpResponseStatusCode StatusCode { get; set; }
 
         public IHttpHeaderCollection Headers { get; }
-
-        public byte[] Control { get; }
+        public byte[] Content { get; set; }
 
         public void AddHeader(HttpHeader header)
         {
-            throw new NotImplementedException();
+            CoreValidator.ThrowIfNull(header, name: nameof(header));
+            this.Headers.AddHeader(header);
         }
 
         public byte[] GetBytes()
@@ -48,7 +49,17 @@ namespace MiniServer.HTTP.Responses
 
         public override string ToString()
         {
-            return base.ToString();
+            StringBuilder result = new StringBuilder();
+
+            result
+                .Append($"{GlobalConstants.HttpOneProtocolFragment} {(int)this.StatusCode} {this.StatusCode.ToString()}")
+                .Append(GlobalConstants.HttpNewLine)
+                .Append(this.Headers)
+                .Append(GlobalConstants.HttpNewLine);
+
+            result.Append(GlobalConstants.HttpNewLine);
+
+            return result.ToString();
         }
     }
 }
